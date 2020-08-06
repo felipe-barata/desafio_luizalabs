@@ -3,9 +3,15 @@ package br.com.luizalabs.desafio.controllers;
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
 import br.com.luizalabs.desafio.dtos.entrada.PaginacaoDTO;
 import br.com.luizalabs.desafio.dtos.saida.ListaMensagensDTO;
+import br.com.luizalabs.desafio.dtos.saida.ResponseErroDTO;
 import br.com.luizalabs.desafio.exceptions.ErroDeValidacaoException;
 import br.com.luizalabs.desafio.exceptions.MensagemException;
 import br.com.luizalabs.desafio.services.MensagemService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,6 +39,13 @@ public class MensagemController {
   @Autowired
   private MensagemService mensagemService;
 
+  @Operation(summary = "Insere uma mensagem")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Mensagem criada", content = @Content(schema = @Schema(implementation = Long.class))),
+      @ApiResponse(responseCode = "204", description = "Nenhuma informação foi inserida", content = @Content()),
+      @ApiResponse(responseCode = "400", description = "Ocorreram erros de validação", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class))),
+      @ApiResponse(responseCode = "500", description = "Ocorreu um erro interno no servidor", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class)))
+  })
   @PostMapping(produces = "application/json", consumes = "application/json")
   public ResponseEntity<Long> insereMensagem(@RequestBody @Valid InsereMensagemDTO dto, BindingResult bindingResult) throws MensagemException {
     log.info("insereMensagem");
@@ -52,6 +65,14 @@ public class MensagemController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Cancela o envio de uma mensagem")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Envio cancelado", content = @Content()),
+      @ApiResponse(responseCode = "204", description = "Não foi possível cancelar o envio", content = @Content()),
+      @ApiResponse(responseCode = "409", description = "A mensagem já foi entregue", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class))),
+      @ApiResponse(responseCode = "404", description = "Mensagem não encontrada", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class))),
+      @ApiResponse(responseCode = "500", description = "Ocorreu um erro interno no servidor", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class)))
+  })
   @PutMapping(produces = "application/json")
   public ResponseEntity cancelarEnvio(@RequestParam(name = "idMensagem") Long idMensagem) throws MensagemException {
     log.info("cancelarEnvio - idMensagem: {}", idMensagem);
@@ -63,6 +84,13 @@ public class MensagemController {
     return ResponseEntity.noContent().build();
   }
 
+  @Operation(summary = "Retorna o status do agendamento das mensagens")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Retornou conteúdo"),
+      @ApiResponse(responseCode = "204", description = "Não retornou conteúdo", content = @Content()),
+      @ApiResponse(responseCode = "404", description = "Ocorreram erros de validação", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class))),
+      @ApiResponse(responseCode = "500", description = "Ocorreu um erro interno no servidor", content = @Content(schema = @Schema(implementation = ResponseErroDTO.class)))
+  })
   @GetMapping(produces = "application/json", consumes = "application/json")
   public ResponseEntity<Page<ListaMensagensDTO>> consultaStatusMensagens(@RequestBody(required = false) PaginacaoDTO paginacaoDTO) throws MensagemException {
     log.info("consultaStatusMensagens");

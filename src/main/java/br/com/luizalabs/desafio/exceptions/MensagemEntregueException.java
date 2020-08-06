@@ -7,6 +7,6 @@ import java.text.MessageFormat;
 public class MensagemEntregueException extends MensagemException {
 
   public MensagemEntregueException(Long idMensagem) {
-    super(MessageFormat.format("A mensagem de id: {0} já foi entregue.", idMensagem), HttpStatus.NO_CONTENT);
+    super(MessageFormat.format("A mensagem de id: {0} já foi entregue.", idMensagem), HttpStatus.CONFLICT);
   }
 }
