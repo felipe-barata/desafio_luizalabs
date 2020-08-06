@@ -1,0 +1,144 @@
+{
+	"info": {
+		"_postman_id": "008b7b8b-3239-4960-ade3-4864435054bf",
+		"name": "desafio_magalu",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Cancela envio",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.0.101:9095/api/mensagem?idMensagem=1",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"0",
+						"101"
+					],
+					"port": "9095",
+					"path": [
+						"api",
+						"mensagem"
+					],
+					"query": [
+						{
+							"key": "idMensagem",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Insere mensagem",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"dataHoraEnvio\": \"06-08-2020 17:27:52Z\",\n    \"destinatario\": \"destinatario\",\n    \"mensagem\": \"Teste de mensagem\",\n    \"comunicacoes\": [\n        {\n            \"tipo\": 1\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.0.101:9095/api/mensagem",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"0",
+						"101"
+					],
+					"port": "9095",
+					"path": [
+						"api",
+						"mensagem"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Consulta status sem body",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.0.101:9095/api/mensagem",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"0",
+						"101"
+					],
+					"port": "9095",
+					"path": [
+						"api",
+						"mensagem"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Consulta status com body",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pagina\": 0,\n    \"qtdDeRegistros\": 3,\n    \"ordem\": \"DESC\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.0.101:9095/api/mensagem",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"0",
+						"101"
+					],
+					"port": "9095",
+					"path": [
+						"api",
+						"mensagem"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

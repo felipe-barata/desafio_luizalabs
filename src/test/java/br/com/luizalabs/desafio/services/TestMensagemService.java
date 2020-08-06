@@ -5,11 +5,13 @@ import br.com.luizalabs.desafio.domain.Mensagem;
 import br.com.luizalabs.desafio.domain.chaves.ComunicacaoMensagemPK;
 import br.com.luizalabs.desafio.dtos.entrada.ComunicacoesMensagemDTO;
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
+import br.com.luizalabs.desafio.dtos.entrada.PaginacaoDTO;
 import br.com.luizalabs.desafio.enums.EnumComunicacoes;
 import br.com.luizalabs.desafio.enums.EnumStatusMensagem;
 import br.com.luizalabs.desafio.exceptions.MensagemEntregueException;
 import br.com.luizalabs.desafio.exceptions.MensagemException;
 import br.com.luizalabs.desafio.exceptions.MensagemNaoEncontradaException;
+import br.com.luizalabs.desafio.projections.ListaMensagensProjection;
 import br.com.luizalabs.desafio.repository.ComunicacaoMensagemRepository;
 import br.com.luizalabs.desafio.repository.MensagemRepository;
 import org.junit.jupiter.api.Assertions;
@@ -20,6 +22,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -74,6 +79,45 @@ public class TestMensagemService {
     BDDMockito.given(mensagemRepository.findById(Mockito.anyLong())).willReturn(Optional.of(getMensagem(EnumStatusMensagem.ENTREGUE)));
     BDDMockito.given(mensagemRepository.save(Mockito.any(Mensagem.class))).willReturn(getMensagem(EnumStatusMensagem.ENTREGUE));
     Assertions.assertThrows(MensagemEntregueException.class, () -> mensagemService.cancelaEnvio(1L));
+  }
+
+  @Test
+  public void testConsultaStatusMensagens() throws MensagemException {
+    List<ListaMensagensProjection> c = new ArrayList<>();
+    c.add(new ListaMensagensProjection() {
+      @Override
+      public Integer getIdMensagem() {
+        return 1;
+      }
+
+      @Override
+      public Integer getStatus() {
+        return 1;
+      }
+    });
+    Page<ListaMensagensProjection> pages = new PageImpl<>(c);
+    BDDMockito.given(mensagemRepository.consultaStatusMensagens(Mockito.any(PageRequest.class))).willReturn(pages);
+
+    Assertions.assertFalse(mensagemService.consultaStatusMensagens(PaginacaoDTO.builder().build()).isEmpty());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensSemResultados() throws MensagemException {
+    List<ListaMensagensProjection> c = new ArrayList<>();
+    c.add(new ListaMensagensProjection() {
+      @Override
+      public Integer getIdMensagem() {
+        return 1;
+      }
+
+      @Override
+      public Integer getStatus() {
+        return 1;
+      }
+    });
+    BDDMockito.given(mensagemRepository.consultaStatusMensagens(Mockito.any(PageRequest.class))).willReturn(Page.empty());
+
+    Assertions.assertTrue(mensagemService.consultaStatusMensagens(PaginacaoDTO.builder().build()).isEmpty());
   }
 
   private List<ComunicacaoMensagem> getComunicacao() {

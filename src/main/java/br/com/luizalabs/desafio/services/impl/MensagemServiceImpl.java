@@ -5,17 +5,25 @@ import br.com.luizalabs.desafio.domain.Mensagem;
 import br.com.luizalabs.desafio.domain.chaves.ComunicacaoMensagemPK;
 import br.com.luizalabs.desafio.dtos.entrada.ComunicacoesMensagemDTO;
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
+import br.com.luizalabs.desafio.dtos.entrada.PaginacaoDTO;
+import br.com.luizalabs.desafio.dtos.saida.ListaMensagensDTO;
 import br.com.luizalabs.desafio.enums.EnumComunicacoes;
 import br.com.luizalabs.desafio.enums.EnumStatusMensagem;
 import br.com.luizalabs.desafio.exceptions.ErroInternoException;
 import br.com.luizalabs.desafio.exceptions.MensagemEntregueException;
 import br.com.luizalabs.desafio.exceptions.MensagemException;
 import br.com.luizalabs.desafio.exceptions.MensagemNaoEncontradaException;
+import br.com.luizalabs.desafio.exceptions.OrdenacaoInvalidaException;
+import br.com.luizalabs.desafio.projections.ListaMensagensProjection;
 import br.com.luizalabs.desafio.repository.ComunicacaoMensagemRepository;
 import br.com.luizalabs.desafio.repository.MensagemRepository;
 import br.com.luizalabs.desafio.services.MensagemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,6 +39,9 @@ public class MensagemServiceImpl implements MensagemService {
 
   @Autowired
   private ComunicacaoMensagemRepository comunicacaoMensagemRepository;
+
+  @Value("${paginacao.qtd_por_pagina}")
+  private int qtdPorPagina;
 
   @Override
   public Long insereMensagem(InsereMensagemDTO dto) throws MensagemException {
@@ -93,6 +104,41 @@ public class MensagemServiceImpl implements MensagemService {
       throw new ErroInternoException();
     }
     return true;
+  }
+
+  @Override
+  public Page<ListaMensagensDTO> consultaStatusMensagens(PaginacaoDTO paginacaoDTO) throws MensagemException {
+    Sort.Direction sort = Sort.Direction.ASC;
+    try {
+      if (paginacaoDTO != null && paginacaoDTO.getOrdem() != null && !paginacaoDTO.getOrdem().isEmpty()) {
+        sort = Sort.Direction.fromString(paginacaoDTO.getOrdem());
+      }
+    } catch (IllegalArgumentException e) {
+      throw new OrdenacaoInvalidaException(paginacaoDTO.getOrdem());
+    }
+    int pagina = paginacaoDTO != null ? paginacaoDTO.getPagina() : 0;
+    int qtd = paginacaoDTO != null && paginacaoDTO.getQtdDeRegistros() > 0 ? paginacaoDTO.getQtdDeRegistros() : qtdPorPagina;
+    log.info("consultaStatusMensagens - pagina: {}, qtd: {}, sort:{}", pagina, qtd, sort);
+    try {
+      PageRequest pageRequest = PageRequest.of(pagina, qtd, sort, "idMensagem");
+      Page<ListaMensagensProjection> listaMensagensProjections = mensagemRepository.consultaStatusMensagens(pageRequest);
+      if (listaMensagensProjections != null && !listaMensagensProjections.isEmpty()) {
+        return listaMensagensProjections.map(this::converterParaListaDTO);
+      }
+    } catch (Exception e) {
+      log.error("consultaStatusMensagens - erro: ", e);
+      throw new ErroInternoException();
+    }
+    return Page.empty();
+  }
+
+  private ListaMensagensDTO converterParaListaDTO(ListaMensagensProjection p) {
+    EnumStatusMensagem e = EnumStatusMensagem.get(p.getStatus());
+    return ListaMensagensDTO.builder()
+        .descricaoStatus(e.getDescricao())
+        .idMensagem(p.getIdMensagem())
+        .status(p.getStatus())
+        .build();
   }
 
   private ComunicacaoMensagemPK criaComunicacaoPK(ComunicacoesMensagemDTO c, Long idMensagem) {

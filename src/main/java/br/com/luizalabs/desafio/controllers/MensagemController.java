@@ -1,14 +1,18 @@
 package br.com.luizalabs.desafio.controllers;
 
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
+import br.com.luizalabs.desafio.dtos.entrada.PaginacaoDTO;
+import br.com.luizalabs.desafio.dtos.saida.ListaMensagensDTO;
 import br.com.luizalabs.desafio.exceptions.ErroDeValidacaoException;
 import br.com.luizalabs.desafio.exceptions.MensagemException;
 import br.com.luizalabs.desafio.services.MensagemService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,6 +59,17 @@ public class MensagemController {
     if (mensagemService.cancelaEnvio(idMensagem)) {
       log.info("cancelarEnvio - envio cancelado para o idMensagem: {}", idMensagem);
       return ResponseEntity.ok().build();
+    }
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping(produces = "application/json", consumes = "application/json")
+  public ResponseEntity<Page<ListaMensagensDTO>> consultaStatusMensagens(@RequestBody(required = false) PaginacaoDTO paginacaoDTO) throws MensagemException {
+    log.info("consultaStatusMensagens");
+    Page<ListaMensagensDTO> listaMensagensDTOS = mensagemService.consultaStatusMensagens(paginacaoDTO);
+    if (listaMensagensDTOS != null && !listaMensagensDTOS.isEmpty()) {
+      log.info("consultaStatusMensagens - retornou mensagens");
+      return ResponseEntity.ok(listaMensagensDTOS);
     }
     return ResponseEntity.noContent().build();
   }

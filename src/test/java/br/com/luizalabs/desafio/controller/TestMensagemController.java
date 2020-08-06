@@ -2,9 +2,12 @@ package br.com.luizalabs.desafio.controller;
 
 import br.com.luizalabs.desafio.dtos.entrada.ComunicacoesMensagemDTO;
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
+import br.com.luizalabs.desafio.dtos.entrada.PaginacaoDTO;
+import br.com.luizalabs.desafio.dtos.saida.ListaMensagensDTO;
 import br.com.luizalabs.desafio.enums.EnumComunicacoes;
 import br.com.luizalabs.desafio.exceptions.MensagemEntregueException;
 import br.com.luizalabs.desafio.exceptions.MensagemNaoEncontradaException;
+import br.com.luizalabs.desafio.exceptions.OrdenacaoInvalidaException;
 import br.com.luizalabs.desafio.services.MensagemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -14,12 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -94,6 +100,55 @@ public class TestMensagemController {
         .param("idMensagem", "1")
         .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isNoContent());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensSemBody() throws Exception {
+    BDDMockito.given(mensagemService.consultaStatusMensagens(null)).willReturn(getListaMensagemDTO());
+    mvc.perform(MockMvcRequestBuilders.get(URL)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensSemBodyVaiRetornarVazio() throws Exception {
+    BDDMockito.given(mensagemService.consultaStatusMensagens(null)).willReturn(Page.empty());
+    mvc.perform(MockMvcRequestBuilders.get(URL)
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensComBody() throws Exception {
+    BDDMockito.given(mensagemService.consultaStatusMensagens(Mockito.any(PaginacaoDTO.class))).willReturn(getListaMensagemDTO());
+    mvc.perform(MockMvcRequestBuilders.get(URL)
+        .content(objectMapper.writeValueAsString(PaginacaoDTO.builder().build()))
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensComBodyVaiRetornarVazio() throws Exception {
+    BDDMockito.given(mensagemService.consultaStatusMensagens(Mockito.any(PaginacaoDTO.class))).willReturn(Page.empty());
+    mvc.perform(MockMvcRequestBuilders.get(URL)
+        .content(objectMapper.writeValueAsString(PaginacaoDTO.builder().pagina(0).qtdDeRegistros(0).build()))
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  public void testConsultaStatusMensagensComBodyVaiRetornarOrdemInvalida() throws Exception {
+    BDDMockito.given(mensagemService.consultaStatusMensagens(Mockito.any(PaginacaoDTO.class))).willThrow(new OrdenacaoInvalidaException(""));
+    mvc.perform(MockMvcRequestBuilders.get(URL)
+        .content(objectMapper.writeValueAsString(PaginacaoDTO.builder().build()))
+        .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
+  }
+
+  private Page<ListaMensagensDTO> getListaMensagemDTO() {
+    List<ListaMensagensDTO> lista = new ArrayList<>();
+    lista.add(ListaMensagensDTO.builder().build());
+    return new PageImpl<>(lista);
   }
 
   private InsereMensagemDTO getInsereMensagemDTO() {
