@@ -1,6 +1,7 @@
 package br.com.luizalabs.desafio.domain;
 
 import br.com.luizalabs.desafio.domain.chaves.ComunicacaoMensagemPK;
+import br.com.luizalabs.desafio.enums.EnumComunicacoes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,11 +22,11 @@ public class ComunicacaoMensagem {
   @EmbeddedId
   private ComunicacaoMensagemPK chave;
 
-  public Integer getTipo(){
+  public EnumComunicacoes getTipo() {
     return chave.getTipo();
   }
 
-  public Long getIdMensagem(){
+  public Long getIdMensagem() {
     return chave.getIdMensagem();
   }
 }

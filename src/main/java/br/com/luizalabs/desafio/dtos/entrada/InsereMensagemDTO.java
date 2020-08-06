@@ -19,7 +19,7 @@ import java.util.List;
 @Builder
 public class InsereMensagemDTO implements Serializable {
 
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss'Z'")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss'Z'")
   @NotNull(message = "Data inicial é obrigatória")
   private LocalDateTime dataHoraEnvio;
 

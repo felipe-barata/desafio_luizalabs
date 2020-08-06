@@ -5,7 +5,12 @@ import br.com.luizalabs.desafio.domain.Mensagem;
 import br.com.luizalabs.desafio.domain.chaves.ComunicacaoMensagemPK;
 import br.com.luizalabs.desafio.dtos.entrada.ComunicacoesMensagemDTO;
 import br.com.luizalabs.desafio.dtos.entrada.InsereMensagemDTO;
+import br.com.luizalabs.desafio.enums.EnumComunicacoes;
 import br.com.luizalabs.desafio.enums.EnumStatusMensagem;
+import br.com.luizalabs.desafio.exceptions.ErroInternoException;
+import br.com.luizalabs.desafio.exceptions.MensagemEntregueException;
+import br.com.luizalabs.desafio.exceptions.MensagemException;
+import br.com.luizalabs.desafio.exceptions.MensagemNaoEncontradaException;
 import br.com.luizalabs.desafio.repository.ComunicacaoMensagemRepository;
 import br.com.luizalabs.desafio.repository.MensagemRepository;
 import br.com.luizalabs.desafio.services.MensagemService;
@@ -28,7 +33,7 @@ public class MensagemServiceImpl implements MensagemService {
   private ComunicacaoMensagemRepository comunicacaoMensagemRepository;
 
   @Override
-  public Long insereMensagem(InsereMensagemDTO dto) {
+  public Long insereMensagem(InsereMensagemDTO dto) throws MensagemException {
     log.info("insereMensagem");
     try {
       Mensagem mensagem = Mensagem.builder()
@@ -55,24 +60,24 @@ public class MensagemServiceImpl implements MensagemService {
       return idMensagem;
     } catch (Exception e) {
       log.error("insereMensagem - erro: ", e);
+      throw new ErroInternoException();
     }
-    return 0L;
   }
 
   @Override
-  public Boolean cancelaEnvio(Long idMensagem) {
+  public Boolean cancelaEnvio(Long idMensagem) throws MensagemException {
     log.info("cancelaEnvio - idMensagem: {}", idMensagem);
     try {
       Optional<Mensagem> optionalMensagem = mensagemRepository.findById(idMensagem);
       if (optionalMensagem.isEmpty()) {
         log.warn("cancelaEnvio - nao encontrou mensagem com id: {}", idMensagem);
-        return false;
+        throw new MensagemNaoEncontradaException(idMensagem);
       }
 
       Mensagem mensagem = optionalMensagem.get();
       if (mensagem.getStatus().getStatus() == EnumStatusMensagem.ENTREGUE.getStatus()) {
         log.warn("cancelaEnvio - a mensagem com id: {} ja foi entregue", idMensagem);
-        return false;
+        throw new MensagemEntregueException(idMensagem);
       }
       mensagem.setStatus(EnumStatusMensagem.CANCELADO);
       mensagem = mensagemRepository.save(mensagem);
@@ -81,7 +86,11 @@ public class MensagemServiceImpl implements MensagemService {
         return false;
       }
     } catch (Exception e) {
+      if (e instanceof MensagemException) {
+        throw e;
+      }
       log.error("cancelaEnvio - erro: ", e);
+      throw new ErroInternoException();
     }
     return true;
   }
@@ -89,7 +98,7 @@ public class MensagemServiceImpl implements MensagemService {
   private ComunicacaoMensagemPK criaComunicacaoPK(ComunicacoesMensagemDTO c, Long idMensagem) {
     return ComunicacaoMensagemPK.builder()
         .idMensagem(idMensagem)
-        .tipo(c.getTipo())
+        .tipo(EnumComunicacoes.get(c.getTipo()))
         .build();
   }
 }
