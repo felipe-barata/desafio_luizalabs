@@ -99,7 +99,7 @@ public class TestMensagemController {
     mvc.perform(MockMvcRequestBuilders.put(URL)
         .param("idMensagem", "1")
         .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isNoContent());
+        .andExpect(status().isConflict());
   }
 
   @Test
